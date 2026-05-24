@@ -22,8 +22,9 @@ function initialize() {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       phone TEXT,
-      email TEXT,
-      address TEXT,
+      license_plate TEXT,
+      car_model TEXT,
+      manufacture_date TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );

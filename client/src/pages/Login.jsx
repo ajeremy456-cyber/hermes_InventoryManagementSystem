@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
 export default function Login() {
   const { login } = useAuth()
+  const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -14,6 +16,7 @@ export default function Login() {
     setLoading(true)
     try {
       await login(username, password)
+      navigate('/')
     } catch (err) {
       setError(err.response?.data?.error || '登入失敗')
     } finally {
