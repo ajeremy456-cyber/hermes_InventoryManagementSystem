@@ -20,7 +20,7 @@ router.get('/:id', (req, res) => {
     if (!purchase) return res.status(404).json({ error: '進貨記錄不存在' });
 
     const items = db.getDb().prepare(`
-      SELECT pi.*, p.name as product_name, p.sku
+      SELECT pi.*, p.name as product_name
       FROM purchase_items pi
       LEFT JOIN products p ON pi.product_id = p.id
       WHERE pi.purchase_id = ?

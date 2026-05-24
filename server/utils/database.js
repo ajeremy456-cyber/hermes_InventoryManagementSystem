@@ -48,12 +48,15 @@ function initialize() {
     -- 銷售資料表
     CREATE TABLE IF NOT EXISTS sales (
       id TEXT PRIMARY KEY,
+      order_number TEXT UNIQUE NOT NULL,
       customer_id TEXT,
+      invoice_number TEXT,
       total_amount REAL NOT NULL,
       discount REAL DEFAULT 0,
       final_amount REAL NOT NULL,
       payment_method TEXT DEFAULT 'cash',
       note TEXT,
+      next_service_date TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (customer_id) REFERENCES customers(id)
     );

@@ -3,12 +3,17 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../utils/database');
 
+const generateOrderNumber = () => {
+  const result = db.getDb().prepare("SELECT COUNT(*) as count FROM sales").get();
+  return `S${result.count + 1}`;
+};
+
 // Get all sales
 router.get('/', (req, res) => {
   try {
     const { startDate, endDate, customerId } = req.query;
     let query = `
-      SELECT s.*, c.name as customer_name 
+      SELECT s.*, c.name as customer_name, c.license_plate as vehicle_plate 
       FROM sales s 
       LEFT JOIN customers c ON s.customer_id = c.id 
       WHERE 1=1
@@ -40,7 +45,7 @@ router.get('/', (req, res) => {
 router.get('/:id', (req, res) => {
   try {
     const sale = db.getDb().prepare(`
-      SELECT s.*, c.name as customer_name 
+      SELECT s.*, c.name as customer_name, c.license_plate as vehicle_plate 
       FROM sales s 
       LEFT JOIN customers c ON s.customer_id = c.id 
       WHERE s.id = ?
@@ -49,7 +54,7 @@ router.get('/:id', (req, res) => {
     if (!sale) return res.status(404).json({ error: '銷售記錄不存在' });
     
     const items = db.getDb().prepare(`
-      SELECT si.*, p.name as product_name, p.sku 
+      SELECT si.*, p.name as product_name 
       FROM sale_items si 
       LEFT JOIN products p ON si.product_id = p.id 
       WHERE si.sale_id = ?
@@ -64,13 +69,12 @@ router.get('/:id', (req, res) => {
 // Create sale
 router.post('/', (req, res) => {
   try {
-    const { customer_id, items, discount = 0, payment_method = 'cash', note } = req.body;
+    const { customer_id, items, discount = 0, payment_method = 'cash', note, invoice_number, next_service_date } = req.body;
     
     if (!items || items.length === 0) {
       return res.status(400).json({ error: '請選擇至少一個產品' });
     }
 
-    // Calculate totals
     let totalAmount = 0;
     for (const item of items) {
       totalAmount += item.quantity * item.unit_price;
@@ -78,12 +82,12 @@ router.post('/', (req, res) => {
     const finalAmount = totalAmount - discount;
 
     const saleId = uuidv4();
+    const orderNumber = generateOrderNumber();
     
-    // Insert sale
     db.getDb().prepare(`
-      INSERT INTO sales (id, customer_id, total_amount, discount, final_amount, payment_method, note)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(saleId, customer_id || null, totalAmount, discount, finalAmount, payment_method, note || null);
+      INSERT INTO sales (id, order_number, customer_id, invoice_number, total_amount, discount, final_amount, payment_method, note, next_service_date)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(saleId, orderNumber, customer_id || null, invoice_number || null, totalAmount, discount, finalAmount, payment_method, note || null, next_service_date || null);
 
     // Insert items and update stock
     const insertItem = db.getDb().prepare(`
@@ -101,7 +105,7 @@ router.post('/', (req, res) => {
     }
 
     const sale = db.getDb().prepare(`
-      SELECT s.*, c.name as customer_name 
+      SELECT s.*, c.name as customer_name, c.license_plate as vehicle_plate 
       FROM sales s 
       LEFT JOIN customers c ON s.customer_id = c.id 
       WHERE s.id = ?
@@ -169,7 +173,7 @@ router.get('/report/summary', (req, res) => {
     `).all(...params);
 
     const topProducts = db.getDb().prepare(`
-      SELECT p.name, p.sku, SUM(si.quantity) as total_qty, SUM(si.subtotal) as total_amount
+      SELECT p.name, SUM(si.quantity) as total_qty, SUM(si.subtotal) as total_amount
       FROM sale_items si
       JOIN products p ON si.product_id = p.id
       JOIN sales s ON si.sale_id = s.id
