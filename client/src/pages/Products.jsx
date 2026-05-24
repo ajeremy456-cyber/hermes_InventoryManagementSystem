@@ -8,20 +8,50 @@ export default function Products() {
   const [showModal, setShowModal] = useState(false)
   const [editData, setEditData] = useState(null)
   const [filterLowStock, setFilterLowStock] = useState(false)
-  const [form, setForm] = useState({ name: '', sku: '', category: '', price: '', cost: '', quantity: '', min_stock: '10', unit: '', description: '' })
+  const [searchKeyword, setSearchKeyword] = useState('')
+  const [form, setForm] = useState({ name: '', category_id: '', sub_category_id: '', price: '', cost: '', quantity: '', min_stock: '10', unit: '', description: '' })
   const [error, setError] = useState('')
 
   const loadProducts = () => {
-    api.getProducts(filterLowStock ? { lowStock: 'true' } : {}).then(res => setProducts(res.data)).finally(() => setLoading(false))
+    if (searchKeyword.trim()) {
+      api.searchProducts(searchKeyword).then(res => setProducts(res.data)).finally(() => setLoading(false))
+    } else if (filterLowStock) {
+      api.getProducts({ lowStock: 'true' }).then(res => setProducts(res.data)).finally(() => setLoading(false))
+    } else {
+      api.getProducts().then(res => setProducts(res.data)).finally(() => setLoading(false))
+    }
   }
 
-  useEffect(() => { loadProducts() }, [filterLowStock])
+  useEffect(() => { loadProducts() }, [filterLowStock, searchKeyword])
   useEffect(() => { api.getCategories().then(res => setCategories(res.data)).catch(() => {}) }, [])
 
-  const openCreate = () => { setEditData(null); setForm({ name: '', sku: '', category: '', price: '', cost: '', quantity: '', min_stock: '10', unit: '', description: '' }); setError(''); setShowModal(true) }
+  const getParentCategories = () => categories.filter(c => !c.parent_id)
+  const getChildCategories = (parentId) => categories.filter(c => c.parent_id === parentId)
+
+  const handleCategoryChange = (categoryId) => {
+    setForm({ ...form, category_id: categoryId, sub_category_id: '' })
+  }
+
+  const openCreate = () => { 
+    setEditData(null); 
+    setForm({ name: '', category_id: '', sub_category_id: '', price: '', cost: '', quantity: '', min_stock: '10', unit: '', description: '' }); 
+    setError(''); 
+    setShowModal(true) 
+  }
+  
   const openEdit = (p) => {
     setEditData(p)
-    setForm({ name: p.name, sku: p.sku || '', category: p.category || '', price: p.price, cost: p.cost, quantity: p.quantity, min_stock: p.min_stock, unit: p.unit || '', description: p.description || '' })
+    setForm({ 
+      name: p.name, 
+      category_id: p.category_id || '', 
+      sub_category_id: p.sub_category_id || '', 
+      price: p.price, 
+      cost: p.cost, 
+      quantity: p.quantity, 
+      min_stock: p.min_stock, 
+      unit: p.unit || '', 
+      description: p.description || '' 
+    })
     setError('')
     setShowModal(true)
   }
@@ -29,7 +59,13 @@ export default function Products() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      const data = { ...form, price: parseFloat(form.price), cost: parseFloat(form.cost) || 0, quantity: parseInt(form.quantity) || 0, min_stock: parseInt(form.min_stock) || 10 }
+      const data = { 
+        ...form, 
+        price: parseFloat(form.price), 
+        cost: parseFloat(form.cost) || 0, 
+        quantity: parseInt(form.quantity) || 0, 
+        min_stock: parseInt(form.min_stock) || 10 
+      }
       if (editData) { await api.updateProduct(editData.id, data) } else { await api.createProduct(data) }
       setShowModal(false)
       loadProducts()
@@ -42,6 +78,14 @@ export default function Products() {
     if (p.quantity === 0) return 'badge-danger'
     if (p.quantity <= p.min_stock) return 'badge-warning'
     return 'badge-success'
+  }
+
+  const getCategoryDisplay = (p) => {
+    const parent = categories.find(c => c.id === p.category_id)
+    const child = categories.find(c => c.id === p.sub_category_id)
+    if (child) return `${parent?.name || ''} / ${child.name}`
+    if (parent) return parent.name
+    return '-'
   }
 
   if (loading) return <div className="loading">載入中...</div>
@@ -57,18 +101,24 @@ export default function Products() {
           <button className="btn btn-primary" onClick={openCreate}>新增產品</button>
         </div>
       </div>
-
+          <div className="search-bar">
+            <input 
+          type="text" 
+          placeholder="輸入名稱/類別." 
+          value={searchKeyword}
+          onChange={e => setSearchKeyword(e.target.value)}
+            />
+          </div>
       <div className="card">
         <div className="table-container">
           {products.length > 0 ? (
             <table>
-              <thead><tr><th>名稱</th><th>SKU</th><th>類別</th><th>售價</th><th>成本</th><th>庫存</th><th>狀態</th><th>操作</th></tr></thead>
+              <thead><tr><th>名稱</th><th>類別</th><th>售價</th><th>成本</th><th>庫存</th><th>狀態</th><th>操作</th></tr></thead>
               <tbody>
                 {products.map(p => (
                   <tr key={p.id}>
                     <td>{p.name}</td>
-                    <td>{p.sku || '-'}</td>
-                    <td>{p.category || '-'}</td>
+                    <td>{getCategoryDisplay(p)}</td>
                     <td>${p.price.toLocaleString()}</td>
                     <td>${p.cost.toLocaleString()}</td>
                     <td>{p.quantity} {p.unit || ''}</td>
@@ -93,8 +143,24 @@ export default function Products() {
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <div className="form-group"><label>名稱 *</label><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required /></div>
-                <div className="form-group"><label>SKU</label><input value={form.sku} onChange={e => setForm({ ...form, sku: e.target.value })} /></div>
-                <div className="form-group"><label>類別</label><input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} list="categories" /><datalist id="categories">{categories.map(c => <option key={c} value={c} />)}</datalist></div>
+                <div className="form-group">
+                  <label>主類別</label>
+                  <select value={form.category_id} onChange={e => handleCategoryChange(e.target.value)}>
+                    <option value="">選擇主類別</option>
+                    {getParentCategories().map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>子類別</label>
+                  <select value={form.sub_category_id} onChange={e => setForm({ ...form, sub_category_id: e.target.value })} disabled={!form.category_id}>
+                    <option value="">選擇子類別</option>
+                    {form.category_id && getChildCategories(form.category_id).map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
                 <div className="form-group"><label>單位</label><input value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} placeholder="如: 件、箱、個" /></div>
                 <div className="form-group"><label>售價 *</label><input type="number" step="0.01" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} required /></div>
                 <div className="form-group"><label>成本</label><input type="number" step="0.01" value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} /></div>

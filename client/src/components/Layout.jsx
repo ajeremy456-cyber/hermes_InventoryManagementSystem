@@ -16,7 +16,7 @@ export default function Layout() {
         <h2>📦 庫存系統</h2>
         <nav>
           <NavLink to="/" end><span>📊</span> 儀表板</NavLink>
-          <NavLink to="/customers"><span>👥</span> 客戶管理</NavLink>
+          <NavLink to="/customers"><span>👥</span> 車輛管理</NavLink>
           <NavLink to="/products"><span>📦</span> 庫存管理</NavLink>
           <NavLink to="/sales"><span>💰</span> 銷售管理</NavLink>
           <NavLink to="/purchases"><span>🚚</span> 進貨管理</NavLink>

@@ -13,6 +13,7 @@ const userRoutes = require('./routes/users');
 const logRoutes = require('./routes/logs');
 const settingRoutes = require('./routes/settings');
 const authRoutes = require('./routes/auth');
+const categoryRoutes = require('./routes/categories');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -35,6 +36,7 @@ app.use('/api/purchases', authMiddleware, purchaseRoutes);
 app.use('/api/users', authMiddleware, userRoutes);
 app.use('/api/logs', authMiddleware, logRoutes);
 app.use('/api/settings', authMiddleware, settingRoutes);
+app.use('/api/categories', authMiddleware, categoryRoutes);
 
 // Dashboard stats
 app.get('/api/dashboard/stats', authMiddleware, (req, res) => {

@@ -33,8 +33,8 @@ function initialize() {
     CREATE TABLE IF NOT EXISTS products (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
-      sku TEXT UNIQUE,
-      category TEXT,
+      category_id TEXT,
+      sub_category_id TEXT,
       price REAL NOT NULL DEFAULT 0,
       cost REAL NOT NULL DEFAULT 0,
       quantity INTEGER NOT NULL DEFAULT 0,

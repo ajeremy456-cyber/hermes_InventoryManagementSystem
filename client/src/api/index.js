@@ -50,7 +50,11 @@ export default {
   updateProduct: (id, data) => api.put(`/products/${id}`, data),
   deleteProduct: (id) => api.delete(`/products/${id}`),
   updateProductStock: (id, data) => api.patch(`/products/${id}/stock`, data),
-  getCategories: () => api.get('/products/meta/categories'),
+  searchProducts: (keyword) => api.get(`/products/search/${keyword}`),
+  getCategories: () => api.get('/categories'),
+  createCategory: (data) => api.post('/categories', data),
+  updateCategory: (id, data) => api.put(`/categories/${id}`, data),
+  deleteCategory: (id) => api.delete(`/categories/${id}`),
 
   // Sales
   getSales: (params) => api.get('/sales', { params }),
