@@ -1,0 +1,86 @@
+const express = require('express');
+const router = express.Router();
+const { v4: uuidv4 } = require('uuid');
+const db = require('../utils/database');
+
+// Get all customers
+router.get('/', (req, res) => {
+  try {
+    const customers = db.getDb().prepare('SELECT * FROM customers ORDER BY created_at DESC').all();
+    res.json(customers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get single customer
+router.get('/:id', (req, res) => {
+  try {
+    const customer = db.getDb().prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
+    if (!customer) return res.status(404).json({ error: '客戶不存在' });
+    res.json(customer);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create customer
+router.post('/', (req, res) => {
+  try {
+    const { name, phone, email, address } = req.body;
+    if (!name) return res.status(400).json({ error: '姓名為必填欄位' });
+
+    const id = uuidv4();
+    db.getDb().prepare(`
+      INSERT INTO customers (id, name, phone, email, address) VALUES (?, ?, ?, ?, ?)
+    `).run(id, name, phone || null, email || null, address || null);
+
+    const customer = db.getDb().prepare('SELECT * FROM customers WHERE id = ?').get(id);
+    res.status(201).json(customer);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update customer
+router.put('/:id', (req, res) => {
+  try {
+    const { name, phone, email, address } = req.body;
+    const existing = db.getDb().prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
+    if (!existing) return res.status(404).json({ error: '客戶不存在' });
+
+    db.getDb().prepare(`
+      UPDATE customers SET name = ?, phone = ?, email = ?, address = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
+    `).run(name || existing.name, phone, email, address, req.params.id);
+
+    res.json(db.getDb().prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id));
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete customer
+router.delete('/:id', (req, res) => {
+  try {
+    const result = db.getDb().prepare('DELETE FROM customers WHERE id = ?').run(req.params.id);
+    if (result.changes === 0) return res.status(404).json({ error: '客戶不存在' });
+    res.json({ message: '客戶已刪除' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Search customers
+router.get('/search/:keyword', (req, res) => {
+  try {
+    const keyword = `%${req.params.keyword}%`;
+    const customers = db.getDb().prepare(`
+      SELECT * FROM customers WHERE name LIKE ? OR phone LIKE ? OR email LIKE ? ORDER BY name
+    `).all(keyword, keyword, keyword);
+    res.json(customers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+module.exports = router;
