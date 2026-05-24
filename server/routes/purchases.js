@@ -3,10 +3,30 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../utils/database');
 
-// Get all purchases
+const getCurrentTimestamp = () => {
+  const now = new Date();
+  now.setHours(now.getHours() + 8);
+  return now.toISOString().slice(0, 19).replace('T', ' ');
+};
+
+// Get all purchases with product details
 router.get('/', (req, res) => {
   try {
     const purchases = db.getDb().prepare('SELECT * FROM purchases ORDER BY created_at DESC').all();
+    
+    for (const purchase of purchases) {
+      const items = db.getDb().prepare(`
+        SELECT pi.quantity, p.name as product_name
+        FROM purchase_items pi
+        LEFT JOIN products p ON pi.product_id = p.id
+        WHERE pi.purchase_id = ?
+      `).all(purchase.id);
+      
+      purchase.product_names = items.map(i => i.product_name).filter(Boolean).join(', ');
+      purchase.item_count = items.length;
+      purchase.total_quantity = items.reduce((sum, i) => sum + i.quantity, 0);
+    }
+    
     res.json(purchases);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -47,11 +67,12 @@ router.post('/', (req, res) => {
     }
 
     const purchaseId = uuidv4();
+    const now = getCurrentTimestamp();
 
     db.getDb().prepare(`
-      INSERT INTO purchases (id, supplier, total_amount, payment_status, note)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(purchaseId, supplier || null, totalAmount, payment_status, note || null);
+      INSERT INTO purchases (id, supplier, total_amount, payment_status, note, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(purchaseId, supplier || null, totalAmount, payment_status, note || null, now);
 
     const insertItem = db.getDb().prepare(`
       INSERT INTO purchase_items (id, purchase_id, product_id, quantity, unit_cost, subtotal)

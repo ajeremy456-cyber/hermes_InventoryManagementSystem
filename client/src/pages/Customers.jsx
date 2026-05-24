@@ -144,7 +144,7 @@ setShowInspectionModal(true)
         <div className="table-container">
           {customers.length > 0 ? (
             <table>
-              <thead><tr><th>車牌</th><th>姓名</th><th>手機號碼</th><th>車型</th><th>車輛出廠/領照日期</th><th>上次到廠日期</th><th>操作</th></tr></thead>
+              <thead><tr><th>車牌</th><th>姓名</th><th>手機號碼</th><th>車型</th><th>車輛出廠/領照日期</th><th>回廠日期</th><th>操作</th></tr></thead>
               <tbody>
                 {customers.map(c => (
                   <tr key={c.id}>

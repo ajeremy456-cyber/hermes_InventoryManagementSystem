@@ -1,3 +1,9 @@
+const getCurrentTimestamp = () => {
+  const now = new Date();
+  now.setHours(now.getHours() + 8);
+  return now.toISOString().slice(0, 19).replace('T', ' ');
+};
+
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
@@ -83,11 +89,12 @@ router.post('/', (req, res) => {
 
     const saleId = uuidv4();
     const orderNumber = generateOrderNumber();
+    const now = getCurrentTimestamp();
     
     db.getDb().prepare(`
-      INSERT INTO sales (id, order_number, customer_id, invoice_number, total_amount, discount, final_amount, payment_method, note, next_service_date)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(saleId, orderNumber, customer_id || null, invoice_number || null, totalAmount, discount, finalAmount, payment_method, note || null, next_service_date || null);
+      INSERT INTO sales (id, order_number, customer_id, invoice_number, total_amount, discount, final_amount, payment_method, note, next_service_date, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(saleId, orderNumber, customer_id || null, invoice_number || null, totalAmount, discount, finalAmount, payment_method, note || null, next_service_date || null, now);
 
     // Insert items and update stock
     const insertItem = db.getDb().prepare(`

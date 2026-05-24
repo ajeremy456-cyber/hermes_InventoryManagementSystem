@@ -3,12 +3,15 @@ import api from '../api'
 
 export default function Purchases() {
   const [purchases, setPurchases] = useState([])
-  const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState({ supplier: '', payment_status: 'pending', note: '' })
-  const [items, setItems] = useState([])
+  
   const [error, setError] = useState('')
+  const [products, setProducts] = useState([])       // 所有商品選單
+  const [items, setItems] = useState([])             // 這次要進貨的項目明細
+  const [productSearch, setProductSearch] = useState('') // 搜尋關鍵字
+
 
   const loadData = () => {
     Promise.all([api.getPurchases(), api.getProducts()])
@@ -20,13 +23,34 @@ export default function Purchases() {
 
   useEffect(() => { loadData() }, [])
 
+// 2. 點擊商品加入進貨單
+const addItem = (productId) => {
+  const product = products.find(p => p.id === productId)
+  if (!product) return
+  if (items.find(i => i.product_id === productId)) return // 防呆：重複點擊不重複加入
+  
+  setItems([
+    ...items, 
+    { 
+      product_id: productId, 
+      name: product.name, 
+      quantity: 1, 
+      unit_price: product.cost || 0 // 【關鍵】進貨帶入的是「成本 (cost)」
+    }
+  ])
+}
+
+// 3. 商品搜尋篩選
+const filteredProducts = productSearch.trim()
+  ? products.filter(p => 
+      p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+      (p.category_name && p.category_name.toLowerCase().includes(productSearch.toLowerCase()))
+    )
+  : products
+
   const openCreate = () => { setForm({ supplier: '', payment_status: 'pending', note: '' }); setItems([]); setError(''); setShowModal(true) }
 
-  const addItem = (productId) => {
-    const product = products.find(p => p.id === productId)
-    if (!product || items.find(i => i.product_id === productId)) return
-    setItems([...items, { product_id: productId, name: product.name, quantity: 1, unit_cost: product.cost || 0 }])
-  }
+
 
   const updateItem = (productId, field, value) => {
     setItems(items.map(i => i.product_id === productId ? { ...i, [field]: value } : i))
@@ -70,12 +94,14 @@ export default function Purchases() {
         <div className="table-container">
           {purchases.length > 0 ? (
             <table>
-              <thead><tr><th>日期</th><th>供應商</th><th>金額</th><th>付款狀態</th><th>操作</th></tr></thead>
+              <thead><tr><th>日期</th><th>供應商</th><th>商品名稱</th><th>品項數/總數量</th><th>金額</th><th>付款狀態</th><th>操作</th></tr></thead>
               <tbody>
                 {purchases.map(p => (
                   <tr key={p.id}>
                     <td>{new Date(p.created_at).toLocaleString()}</td>
                     <td>{p.supplier || '-'}</td>
+                    <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.product_names || '-'}>{p.product_names || '-'}</td>
+                    <td>{p.item_count || 0}項 / {p.total_quantity || 0}件</td>
                     <td>${p.total_amount.toLocaleString()}</td>
                     <td>
                       <select value={p.payment_status} onChange={e => handleStatusChange(p.id, e.target.value)} className={`badge ${p.payment_status === 'paid' ? 'badge-success' : 'badge-warning'}`} style={{ border: 'none', cursor: 'pointer', background: 'transparent' }}>
@@ -103,12 +129,39 @@ export default function Purchases() {
                 <div className="form-group"><label>付款狀態</label><select value={form.payment_status} onChange={e => setForm({ ...form, payment_status: e.target.value })}><option value="pending">待付款</option><option value="paid">已付款</option></select></div>
               </div>
 
-              <div style={{ margin: '1rem 0' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>選擇產品</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {products.map(p => <button type="button" key={p.id} className={`btn btn-sm ${items.find(i => i.product_id === p.id) ? 'btn-primary' : 'btn-secondary'}`} onClick={() => addItem(p.id)}>{p.name}</button>)}
-                </div>
-              </div>
+             <div style={{ margin: '1rem 0' }}>
+  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>選擇進貨商品</label>
+  
+  {/* 搜尋商品輸入框 */}
+  <input 
+    type="text" 
+    placeholder="搜尋商品名稱或類別..." 
+    value={productSearch}
+    onChange={e => setProductSearch(e.target.value)}
+    style={{ width: '100%', padding: '0.5rem', marginBottom: '0.5rem', border: '1px solid #ddd', borderRadius: '6px' }}
+  />
+  
+  {/* 商品按鈕滾動清單 */}
+  <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #eee', borderRadius: '6px', padding: '0.5rem' }}>
+    {filteredProducts.length > 0 ? (
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+        {filteredProducts.map(p => (
+          <button 
+            type="button" 
+            key={p.id} 
+            /* 已在進貨單內的商品變藍色，其餘灰色 */
+            className={`btn btn-sm ${items.find(i => i.product_id === p.id) ? 'btn-primary' : 'btn-secondary'}`} 
+            onClick={() => addItem(p.id)}
+          >
+            {p.name} {p.cost ? `(成本:$${p.cost})` : ''}
+          </button>
+        ))}
+      </div>
+    ) : (
+      <p style={{ color: '#999', textAlign: 'center' }}>找不到商品</p>
+    )}
+  </div>
+</div>
 
               {items.length > 0 && (
                 <div style={{ margin: '1rem 0' }}>
