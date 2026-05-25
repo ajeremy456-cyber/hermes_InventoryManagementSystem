@@ -359,11 +359,9 @@ export default function Sales() {
                   </div>
                 )}
               </div>
-              {currentOrder.note && (
-                <div style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
-                  <strong>備註：</strong>{currentOrder.note}
-                </div>
-              )}
+              <div style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                <strong>備註：</strong>{currentOrder.note || '-'}
+              </div>
             </div>
 
             <div className="modal-footer">
