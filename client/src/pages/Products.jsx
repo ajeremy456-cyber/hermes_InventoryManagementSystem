@@ -74,6 +74,40 @@ export default function Products() {
 
   const handleDelete = async (id) => { if (confirm('確定要刪除嗎？')) { await api.deleteProduct(id); loadProducts() } }
 
+  const exportToCSV = () => {
+    if (products.length === 0) { alert('沒有資料可以匯出'); return }
+    
+    const headers = ['名稱', '主類別', '子類別', '售價', '成本', '庫存', '單位', '最低庫存', '描述', '建立時間']
+    const rows = products.map(p => {
+      const parent = categories.find(c => c.id === p.category_id)
+      const child = categories.find(c => c.id === p.sub_category_id)
+      return [
+        p.name,
+        parent?.name || '',
+        child?.name || '',
+        p.price,
+        p.cost,
+        p.quantity,
+        p.unit || '',
+        p.min_stock,
+        (p.description || '').replace(/"/g, '""'),
+        p.created_at ? new Date(p.created_at).toLocaleString('zh-TW') : ''
+      ]
+    })
+    
+    const csvContent = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n')
+    const BOM = '\uFEFF'
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `產品列表_${new Date().toISOString().split('T')[0]}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
   const getStockStatus = (p) => {
     if (p.quantity === 0) return 'badge-danger'
     if (p.quantity <= p.min_stock) return 'badge-warning'
@@ -95,6 +129,7 @@ export default function Products() {
       <div className="page-header">
         <h1>庫存管理</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="btn btn-secondary" onClick={exportToCSV}>匯出 CSV</button>
           <button className={`btn ${filterLowStock ? 'btn-danger' : 'btn-secondary'}`} onClick={() => setFilterLowStock(!filterLowStock)}>
             {filterLowStock ? '顯示全部' : '低庫存警示'}
           </button>

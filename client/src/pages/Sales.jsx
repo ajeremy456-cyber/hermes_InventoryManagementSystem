@@ -112,12 +112,42 @@ export default function Sales() {
     loadData()
   }
 
+  const exportToCSV = () => {
+    if (sales.length === 0) { alert('沒有資料可以匯出'); return }
+    
+    const headers = ['訂單編號', '日期', '車牌/客戶', '發票號碼', '總金額', '折扣', '實收金額', '付款方式', '備註']
+    const rows = sales.map(s => [
+      s.order_number || '',
+      new Date(s.created_at).toLocaleString('zh-TW'),
+      getVehicleDisplay(s),
+      s.invoice_number || '',
+      s.total_amount,
+      s.discount || 0,
+      s.final_amount,
+      s.payment_method,
+      (s.note || '').replace(/"/g, '""')
+    ])
+    
+    const csvContent = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n')
+    const BOM = '\uFEFF'
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `銷售列表_${new Date().toISOString().split('T')[0]}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
   if (loading) return <div className="loading">載入中...</div>
 
   return (
     <div>
       <div className="page-header">
         <h1>銷售管理</h1>
+        <button className="btn btn-secondary" onClick={exportToCSV}>匯出 CSV</button>
         <button className="btn btn-primary" onClick={openCreate}>新增銷售</button>
       </div>
 
