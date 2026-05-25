@@ -92,7 +92,7 @@ export default function Settings() {
         <h1>系統設定</h1>
         {message && <span className={message.includes('失敗') ? 'alert alert-error' : 'alert alert-success'} style={{ padding: '0.5rem 1rem' }}>{message}</span>}
       </div>
-
+      {/*
       <div className="card">
         <div className="card-header"><span className="card-title">基本設定</span></div>
         <div className="form-grid">
@@ -105,6 +105,7 @@ export default function Settings() {
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>{saving ? '儲存中...' : '儲存設定'}</button>
         </div>
       </div>
+      */}
 
       <div className="card">
         <div className="card-header"><span className="card-title">庫存類別管理</span></div>

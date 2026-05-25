@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../utils/database');
+const { createLog } = require('./logs');
 
 // Get all products
 router.get('/', (req, res) => {
@@ -46,6 +47,7 @@ router.post('/', (req, res) => {
     `).run(id, name, category_id || null, sub_category_id || null, price, cost || 0, quantity || 0, min_stock || 10, unit || null, description || null);
 
     const product = db.getDb().prepare('SELECT * FROM products WHERE id = ?').get(id);
+    createLog(req.user?.id, '建立', 'product', id, `建立產品：${name}`);
     res.status(201).json(product);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -67,7 +69,9 @@ router.put('/:id', (req, res) => {
       req.params.id
     );
 
-    res.json(db.getDb().prepare('SELECT * FROM products WHERE id = ?').get(req.params.id));
+    const updated = db.getDb().prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
+    createLog(req.user?.id, '更新', 'product', req.params.id, `更新產品：${updated.name}`);
+    res.json(updated);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -76,8 +80,13 @@ router.put('/:id', (req, res) => {
 // Delete product
 router.delete('/:id', (req, res) => {
   try {
+    const existing = db.getDb().prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
+    if (!existing) return res.status(404).json({ error: '產品不存在' });
+
     const result = db.getDb().prepare('DELETE FROM products WHERE id = ?').run(req.params.id);
     if (result.changes === 0) return res.status(404).json({ error: '產品不存在' });
+
+    createLog(req.user?.id, '刪除', 'product', req.params.id, `刪除產品：${existing.name}`);
     res.json({ message: '產品已刪除' });
   } catch (error) {
     res.status(500).json({ error: error.message });

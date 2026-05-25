@@ -8,6 +8,7 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../utils/database');
+const { createLog } = require('./logs');
 
 const generateOrderNumber = () => {
   const result = db.getDb().prepare("SELECT COUNT(*) as count FROM sales").get();
@@ -118,6 +119,7 @@ router.post('/', (req, res) => {
       WHERE s.id = ?
     `).get(saleId);
 
+    createLog(req.user?.id, '建立', 'sale', saleId, `建立銷售：${orderNumber}，金額：${finalAmount}`);
     res.status(201).json(sale);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -141,7 +143,8 @@ router.delete('/:id', (req, res) => {
     // Delete items then sale
     db.getDb().prepare('DELETE FROM sale_items WHERE sale_id = ?').run(req.params.id);
     db.getDb().prepare('DELETE FROM sales WHERE id = ?').run(req.params.id);
-    
+
+    createLog(req.user?.id, '刪除', 'sale', req.params.id, `作廢銷售：${sale.order_number}`);
     res.json({ message: '銷售記錄已刪除（庫存已還原）' });
   } catch (error) {
     res.status(500).json({ error: error.message });

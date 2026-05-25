@@ -43,17 +43,20 @@ export default function Logs() {
         <div className="table-container">
           {logs.length > 0 ? (
             <table>
-              <thead><tr><th>時間</th><th>使用者</th><th>動作</th><th>類型</th><th>IP</th></tr></thead>
+              <thead><tr><th>時間</th><th>使用者</th><th>動作</th><th>更動說明</th></tr></thead>
               <tbody>
-                {logs.map(log => (
-                  <tr key={log.id}>
-                    <td>{new Date(log.created_at).toLocaleString()}</td>
-                    <td>{log.user_name || '-'}</td>
-                    <td>{log.action}</td>
-                    <td><span className="badge badge-info">{log.entity_type || '-'}</span></td>
-                    <td>{log.ip_address || '-'}</td>
-                  </tr>
-                ))}
+                {logs.map(log => {
+                  const date = new Date(log.created_at)
+                  date.setHours(date.getHours() + 8)
+                  return (
+                    <tr key={log.id}>
+                      <td>{date.toLocaleString('zh-TW', { hour12: false })}</td>
+                      <td>{log.user_name || '-'}</td>
+                      <td>{log.action}</td>
+                      <td>{log.details || '-'}</td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           ) : <div className="empty-state">尚無操作紀錄</div>}

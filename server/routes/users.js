@@ -3,6 +3,7 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
 const db = require('../utils/database');
+const { createLog } = require('./logs');
 
 // Get all users
 router.get('/', (req, res) => {
@@ -47,6 +48,7 @@ router.post('/', (req, res) => {
     `).run(id, username, hashedPassword, name, role);
 
     const user = db.getDb().prepare('SELECT id, username, name, role, created_at FROM users WHERE id = ?').get(id);
+    createLog(req.user?.id, '建立', 'user', id, `建立使用者：${username}`);
     res.status(201).json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -69,7 +71,9 @@ router.put('/:id', (req, res) => {
         .run(name || existing.name, role || existing.role, req.params.id);
     }
 
-    res.json(db.getDb().prepare('SELECT id, username, name, role, created_at FROM users WHERE id = ?').get(req.params.id));
+    const updated = db.getDb().prepare('SELECT id, username, name, role, created_at FROM users WHERE id = ?').get(req.params.id);
+    createLog(req.user?.id, '更新', 'user', req.params.id, `更新使用者：${updated.username}`);
+    res.json(updated);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -81,8 +85,13 @@ router.delete('/:id', (req, res) => {
     if (req.params.id === req.user.id) {
       return res.status(400).json({ error: '無法刪除自己' });
     }
+    const existing = db.getDb().prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
+    if (!existing) return res.status(404).json({ error: '使用者不存在' });
+
     const result = db.getDb().prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
     if (result.changes === 0) return res.status(404).json({ error: '使用者不存在' });
+
+    createLog(req.user?.id, '刪除', 'user', req.params.id, `刪除使用者：${existing.username}`);
     res.json({ message: '使用者已刪除' });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -103,6 +112,7 @@ router.patch('/change-password', (req, res) => {
     db.getDb().prepare('UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
       .run(hashedPassword, req.user.id);
 
+    createLog(req.user?.id, '更新', 'user', req.user.id, `修改密碼`);
     res.json({ message: '密碼已更改' });
   } catch (error) {
     res.status(500).json({ error: error.message });

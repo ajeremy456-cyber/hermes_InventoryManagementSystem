@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../utils/database');
+const { createLog } = require('./logs');
 
 // Get all customers
 router.get('/', (req, res) => {
@@ -43,6 +44,7 @@ router.post('/', (req, res) => {
     `).run(id, name, phone || null, license_plate || null, car_model || null, manufacture_date || null);
 
     const customer = db.getDb().prepare('SELECT * FROM customers WHERE id = ?').get(id);
+    createLog(req.user?.id, '建立', 'customer', id, `建立客戶：${name}`);
     res.status(201).json(customer);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -60,7 +62,9 @@ router.put('/:id', (req, res) => {
       UPDATE customers SET name = ?, phone = ?, license_plate = ?, car_model = ?, manufacture_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
     `).run(name || existing.name, phone, license_plate, car_model, manufacture_date, req.params.id);
 
-    res.json(db.getDb().prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id));
+    const updated = db.getDb().prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
+    createLog(req.user?.id, '更新', 'customer', req.params.id, `更新客戶：${updated.name}`);
+    res.json(updated);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -69,8 +73,13 @@ router.put('/:id', (req, res) => {
 // Delete customer
 router.delete('/:id', (req, res) => {
   try {
+    const existing = db.getDb().prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
+    if (!existing) return res.status(404).json({ error: '客戶不存在' });
+
     const result = db.getDb().prepare('DELETE FROM customers WHERE id = ?').run(req.params.id);
     if (result.changes === 0) return res.status(404).json({ error: '客戶不存在' });
+
+    createLog(req.user?.id, '刪除', 'customer', req.params.id, `刪除客戶：${existing.name}`);
     res.json({ message: '客戶已刪除' });
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../utils/database');
+const { createLog } = require('./logs');
 
 // Get all settings
 router.get('/', (req, res) => {
@@ -30,6 +31,7 @@ router.put('/', (req, res) => {
     });
 
     transaction();
+    createLog(req.user?.id, '更新', 'settings', null, `更新系統設定：${Object.keys(updates).join(', ')}`);
     res.json({ message: '設定已更新' });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -55,6 +57,7 @@ router.put('/:key', (req, res) => {
       INSERT INTO settings (key, value) VALUES (?, ?)
       ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
     `).run(req.params.key, value);
+    createLog(req.user?.id, '更新', 'settings', null, `更新設定：${req.params.key}`);
     res.json({ message: '設定已更新' });
   } catch (error) {
     res.status(500).json({ error: error.message });
