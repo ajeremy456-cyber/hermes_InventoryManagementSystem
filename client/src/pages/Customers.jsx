@@ -9,11 +9,13 @@ export default function Customers() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [showInspectionModal, setShowInspectionModal] = useState(false)
+  const [showReturnModal, setShowReturnModal] = useState(false)
   const [editData, setEditData] = useState(null)
-  const [form, setForm] = useState({ license_plate: '', name: '', phone: '', car_model: '', manufacture_date: '' })
+  const [form, setForm] = useState({ license_plate: '', name: '', phone: '', car_model: '', manufacture_date: '', next_service_date: '' })
   const [error, setError] = useState('')
   const [searchKeyword, setSearchKeyword] = useState('')
   const [inspectionList, setInspectionList] = useState([])
+  const [returnList, setReturnList] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
 
   const loadCustomers = () => {
@@ -37,8 +39,8 @@ export default function Customers() {
     return customers.slice(start, start + ITEMS_PER_PAGE)
   }, [customers, currentPage])
 
-  const openCreate = () => { setEditData(null); setForm({ license_plate: '', name: '', phone: '', car_model: '', manufacture_date: '' }); setError(''); setShowModal(true) }
-  const openEdit = (c) => { setEditData(c); setForm({ license_plate: c.license_plate || '', name: c.name || '', phone: c.phone || '', car_model: c.car_model || '', manufacture_date: c.manufacture_date || '' }); setError(''); setShowModal(true) }
+  const openCreate = () => { setEditData(null); setForm({ license_plate: '', name: '', phone: '', car_model: '', manufacture_date: '', next_service_date: '' }); setError(''); setShowModal(true) }
+  const openEdit = (c) => { setEditData(c); setForm({ license_plate: c.license_plate || '', name: c.name || '', phone: c.phone || '', car_model: c.car_model || '', manufacture_date: c.manufacture_date || '', next_service_date: c.next_service_date || '' }); setError(''); setShowModal(true) }
 
  const calculateInspection = () => {
   const now = new Date()
@@ -113,6 +115,28 @@ list.sort((a, b) => a.sortDate - b.sortDate)
 setInspectionList(list)
 setShowInspectionModal(true)
 }
+
+const calculateReturn = () => {
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const startDate = new Date(now)
+  startDate.setDate(startDate.getDate() - 30)
+  const endDate = new Date(now)
+  endDate.setDate(endDate.getDate() + 30)
+
+  const list = customers.filter(c => {
+    if (!c.next_service_date) return false
+    const serviceDate = new Date(c.next_service_date)
+    return serviceDate >= startDate && serviceDate <= endDate
+  }).map(c => ({
+    ...c,
+    sortDate: new Date(c.next_service_date)
+  })).sort((a, b) => a.sortDate - b.sortDate)
+
+  setReturnList(list)
+  setShowReturnModal(true)
+}
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
@@ -141,6 +165,7 @@ setShowInspectionModal(true)
       <div className="page-header">
         <h1>車輛管理</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="btn btn-secondary" onClick={calculateReturn}>回廠提醒</button>
           <button className="btn btn-secondary" onClick={calculateInspection}>驗車提醒</button>
           <button className="btn btn-primary" onClick={openCreate}>新增車輛</button>
         </div>
@@ -160,7 +185,7 @@ setShowInspectionModal(true)
           {customers.length > 0 ? (
             <>
               <table>
-                <thead><tr><th>車牌</th><th>姓名</th><th>手機號碼</th><th>車型</th><th>車輛出廠/領照日期</th><th>回廠日期</th><th>操作</th></tr></thead>
+                <thead><tr><th>車牌</th><th>姓名</th><th>手機號碼</th><th>車型</th><th>出廠日期</th><th>下次回廠</th><th>操作</th></tr></thead>
                 <tbody>
                   {paginatedCustomers.map(c => (
                     <tr key={c.id}>
@@ -169,7 +194,7 @@ setShowInspectionModal(true)
                       <td>{c.phone || '-'}</td>
                       <td>{c.car_model || '-'}</td>
                       <td>{c.manufacture_date || '-'}</td>
-                      <td>{c.last_visit_date ? new Date(c.last_visit_date).toLocaleDateString() : '-'}</td>
+                      <td>{c.next_service_date ? new Date(c.next_service_date).toLocaleDateString() : '-'}</td>
                       <td className="actions">
                         <button className="btn btn-secondary btn-sm" onClick={() => openEdit(c)}>編輯</button>
                         <button className="btn btn-danger btn-sm" onClick={() => handleDelete(c.id)}>刪除</button>
@@ -250,6 +275,46 @@ setShowInspectionModal(true)
             )}
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" onClick={() => setShowInspectionModal(false)}>關閉</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showReturnModal && (
+        <div className="modal-overlay" onClick={() => setShowReturnModal(false)}>
+          <div className="modal" style={{ maxWidth: '700px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>回廠提醒（前後30天）</h2>
+              <button className="modal-close" onClick={() => setShowReturnModal(false)}>×</button>
+            </div>
+            {returnList.length > 0 ? (
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>客戶姓名</th>
+                      <th>車牌</th>
+                      <th>回廠日期</th>
+                      <th>手機號碼</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {returnList.map(c => (
+                      <tr key={c.id}>
+                        <td>{c.name || '-'}</td>
+                        <td>{c.license_plate || '-'}</td>
+                        <td>{new Date(c.next_service_date).toLocaleDateString()}</td>
+                        <td>{c.phone || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="empty-state">30天內沒有需要回廠的客戶</div>
+            )}
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={() => setShowReturnModal(false)}>關閉</button>
             </div>
           </div>
         </div>

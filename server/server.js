@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const db = require('./utils/database');
 const authMiddleware = require('./middleware/auth');
+// const License = require('./utils/License');
 
 // Routes
 const customerRoutes = require('./routes/customers');
@@ -72,8 +73,23 @@ app.get('/api/dashboard/recent-sales', authMiddleware, (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(PORT, async () => {
+  console.log('\n========================================');
+  console.log('🚗 系統啟動中...');
+  
+  // 授權驗證已註解（調試中）
+  // const licenseResult = await License.verify();
+  // if (!licenseResult.valid) {
+  //   console.error('\n❌ 授權驗證失敗！');
+  //   console.error('📋 錯誤原因：' + licenseResult.error);
+  //   console.error('\n請聯絡系統管理員處理。');
+  //   console.error('========================================\n');
+  //   process.exit(1);
+  // }
+  
+  console.log('✅ 授權驗證已暫時停用');
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log('========================================\n');
 });
 
 module.exports = app;

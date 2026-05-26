@@ -25,6 +25,7 @@ function initialize() {
       license_plate TEXT,
       car_model TEXT,
       manufacture_date TEXT,
+      next_service_date TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
