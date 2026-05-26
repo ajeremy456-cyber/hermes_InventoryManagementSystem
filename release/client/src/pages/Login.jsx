@@ -1,0 +1,63 @@
+import { useState } from 'react'
+import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
+
+export default function Login() {
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      await login(username, password)
+      navigate('/')
+    } catch (err) {
+      alert('帳號密碼錯誤')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleInputChange = (setter) => (e) => {
+    setter(e.target.value)
+    setError('')
+  }
+
+  return (
+    <div className="login-container">
+      <div className="login-box">
+        <h1>庫存管理系統</h1>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>帳號</label>
+            <input 
+              type="text" 
+              value={username} 
+              onChange={handleInputChange(setUsername)} 
+              placeholder="請輸入帳號" 
+              required 
+            />
+          </div>
+          <div className="form-group">
+            <label>密碼</label>
+            <input 
+              type="password" 
+              value={password} 
+              onChange={handleInputChange(setPassword)} 
+              placeholder="請輸入密碼" 
+              required 
+            />
+          </div>
+          <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
+            {loading ? '登入中...' : '登入'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
