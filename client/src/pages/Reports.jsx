@@ -27,13 +27,13 @@ export default function Reports() {
       <div className="page-header">
         <h1>銷售報表</h1>
       </div>
-
+      {/*}
       <div className="form-grid" style={{ marginBottom: '1.5rem' }}>
         <div className="form-group"><label>開始日期</label><input type="date" value={dateRange.startDate} onChange={e => setDateRange({ ...dateRange, startDate: e.target.value })} /></div>
         <div className="form-group"><label>結束日期</label><input type="date" value={dateRange.endDate} onChange={e => setDateRange({ ...dateRange, endDate: e.target.value })} /></div>
         <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}><button className="btn btn-primary" onClick={loadReport}>查詢</button></div>
       </div>
-
+        */}
       {report && (
         <>
           <div className="stats-grid">

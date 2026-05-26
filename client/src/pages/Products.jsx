@@ -214,8 +214,8 @@ export default function Products() {
                   </select>
                 </div>
                 <div className="form-group"><label>單位</label><input value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} placeholder="如: 件、箱、個" /></div>
-                <div className="form-group"><label>售價 *</label><input type="number" step="0.01" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} required /></div>
-                <div className="form-group"><label>成本</label><input type="number" step="0.01" value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} /></div>
+                <div className="form-group"><label>售價 *</label><input type="number" step="1" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} required /></div>
+                <div className="form-group"><label>成本</label><input type="number" step="1" value={form.cost} onChange={e => setForm({ ...form, cost: e.target.value })} /></div>
                 <div className="form-group"><label>庫存數量</label><input type="number" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} /></div>
                 <div className="form-group"><label>最低庫存</label><input type="number" value={form.min_stock} onChange={e => setForm({ ...form, min_stock: e.target.value })} /></div>
                 <div className="form-group full"><label>描述</label><textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows="3" /></div>

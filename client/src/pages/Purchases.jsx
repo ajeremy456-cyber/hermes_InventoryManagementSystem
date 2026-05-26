@@ -214,7 +214,7 @@ const filteredProducts = productSearch.trim()
                   {items.map(item => (
                     <div key={item.product_id} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem', padding: '0.5rem', background: '#f8f9fa', borderRadius: '6px' }}>
                       <span style={{ flex: 1 }}>{item.name}</span>
-                      <input type="number" min="1" value={item.quantity} onChange={e => updateItem(item.product_id, 'quantity', parseInt(e.target.value))} style={{ width: '60px', padding: '0.4rem' }} />
+                      <input type="number" min="1" step="1" value={item.quantity} onChange={e => updateItem(item.product_id, 'quantity', parseInt(e.target.value))} style={{ width: '60px', padding: '0.4rem' }} />
                       <input type="number" step="0.01" value={item.unit_cost} onChange={e => updateItem(item.product_id, 'unit_cost', parseFloat(e.target.value))} style={{ width: '80px', padding: '0.4rem' }} placeholder="成本" />
                       <span>= ${(item.quantity * item.unit_cost).toLocaleString()}</span>
                       <button type="button" onClick={() => removeItem(item.product_id)} style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontSize: '1.2rem' }}>×</button>

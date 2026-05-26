@@ -239,7 +239,7 @@ export default function Sales() {
                   {items.map(item => (
                     <div key={item.product_id} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem', padding: '0.5rem', background: '#f8f9fa', borderRadius: '6px' }}>
                       <span style={{ flex: 1 }}>{item.name}</span>
-                      <input type="number" min="1" value={item.quantity} onChange={e => updateItem(item.product_id, 'quantity', parseInt(e.target.value))} style={{ width: '60px', padding: '0.4rem' }} />
+                      <input type="number" min="1" step="1" value={item.quantity} onChange={e => updateItem(item.product_id, 'quantity', parseInt(e.target.value))} style={{ width: '60px', padding: '0.4rem' }} />
                       <span>× ${item.unit_price}</span>
                       <span>= ${(item.quantity * item.unit_price).toLocaleString()}</span>
                       <button type="button" onClick={() => removeItem(item.product_id)} style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', fontSize: '1.2rem' }}>×</button>
@@ -249,7 +249,7 @@ export default function Sales() {
               )}
 
               <div className="form-grid">
-                <div className="form-group"><label>折扣</label><input type="number" step="0.01" value={form.discount} onChange={e => setForm({ ...form, discount: parseFloat(e.target.value) || 0 })} /></div>
+                <div className="form-group"><label>折扣</label><input type="number" step="1" min="0" value={form.discount || ''} onFocus={e => { if (form.discount === 0) e.target.value = '' }} onChange={e => setForm({ ...form, discount: e.target.value === '' ? 0 : (parseFloat(e.target.value) || 0) })} onBlur={e => { if (e.target.value === '' && form.discount === 0) setForm({ ...form, discount: 0 }) }} /></div>
                 <div className="form-group"><label>備註</label><input value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} /></div>
               </div>
 
