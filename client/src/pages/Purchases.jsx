@@ -1,27 +1,35 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import api from '../api'
+import Pagination from '../components/Pagination'
+
+const ITEMS_PER_PAGE = 30
 
 export default function Purchases() {
   const [purchases, setPurchases] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState({ supplier: '', payment_status: 'pending', note: '' })
-  
   const [error, setError] = useState('')
-  const [products, setProducts] = useState([])       // 所有商品選單
-  const [items, setItems] = useState([])             // 這次要進貨的項目明細
-  const [productSearch, setProductSearch] = useState('') // 搜尋關鍵字
-
+  const [products, setProducts] = useState([])
+  const [items, setItems] = useState([])
+  const [productSearch, setProductSearch] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
 
   const loadData = () => {
     Promise.all([api.getPurchases(), api.getProducts()])
       .then(([purchasesRes, productsRes]) => {
         setPurchases(purchasesRes.data)
         setProducts(productsRes.data)
+        setCurrentPage(1)
       }).finally(() => setLoading(false))
   }
 
   useEffect(() => { loadData() }, [])
+
+  const paginatedPurchases = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE
+    return purchases.slice(start, start + ITEMS_PER_PAGE)
+  }, [purchases, currentPage])
 
 // 2. 點擊商品加入進貨單
 const addItem = (productId) => {
@@ -122,27 +130,35 @@ const filteredProducts = productSearch.trim()
       <div className="card">
         <div className="table-container">
           {purchases.length > 0 ? (
-            <table>
-              <thead><tr><th>日期</th><th>供應商</th><th>商品名稱</th><th>品項數/總數量</th><th>金額</th><th>付款狀態</th><th>操作</th></tr></thead>
-              <tbody>
-                {purchases.map(p => (
-                  <tr key={p.id}>
-                    <td>{new Date(p.created_at).toLocaleString()}</td>
-                    <td>{p.supplier || '-'}</td>
-                    <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.product_names || '-'}>{p.product_names || '-'}</td>
-                    <td>{p.item_count || 0}項 / {p.total_quantity || 0}件</td>
-                    <td>${p.total_amount.toLocaleString()}</td>
-                    <td>
-                      <select value={p.payment_status} onChange={e => handleStatusChange(p.id, e.target.value)} className={`badge ${p.payment_status === 'paid' ? 'badge-success' : 'badge-warning'}`} style={{ border: 'none', cursor: 'pointer', background: 'transparent' }}>
-                        <option value="pending">待付款</option>
-                        <option value="paid">已付款</option>
-                      </select>
-                    </td>
-                    <td className="actions"><button className="btn btn-danger btn-sm" onClick={() => handleDelete(p.id)}>刪除</button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <>
+              <table>
+                <thead><tr><th>日期</th><th>供應商</th><th>商品名稱</th><th>品項數/總數量</th><th>金額</th><th>付款狀態</th><th>操作</th></tr></thead>
+                <tbody>
+                  {paginatedPurchases.map(p => (
+                    <tr key={p.id}>
+                      <td>{new Date(p.created_at).toLocaleString()}</td>
+                      <td>{p.supplier || '-'}</td>
+                      <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.product_names || '-'}>{p.product_names || '-'}</td>
+                      <td>{p.item_count || 0}項 / {p.total_quantity || 0}件</td>
+                      <td>${p.total_amount.toLocaleString()}</td>
+                      <td>
+                        <select value={p.payment_status} onChange={e => handleStatusChange(p.id, e.target.value)} className={`badge ${p.payment_status === 'paid' ? 'badge-success' : 'badge-warning'}`} style={{ border: 'none', cursor: 'pointer', background: 'transparent' }}>
+                          <option value="pending">待付款</option>
+                          <option value="paid">已付款</option>
+                        </select>
+                      </td>
+                      <td className="actions"><button className="btn btn-danger btn-sm" onClick={() => handleDelete(p.id)}>刪除</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <Pagination
+                currentPage={currentPage}
+                totalItems={purchases.length}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onPageChange={setCurrentPage}
+              />
+            </>
           ) : <div className="empty-state">尚無進貨記錄</div>}
         </div>
       </div>

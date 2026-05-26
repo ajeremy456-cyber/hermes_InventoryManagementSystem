@@ -1,5 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import api from '../api'
+import Pagination from '../components/Pagination'
+
+const ITEMS_PER_PAGE = 30
 
 export default function Settings() {
   const [settings, setSettings] = useState({})

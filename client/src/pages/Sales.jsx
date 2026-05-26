@@ -1,5 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import api from '../api'
+import Pagination from '../components/Pagination'
+
+const ITEMS_PER_PAGE = 30
 
 export default function Sales() {
   const [sales, setSales] = useState([])
@@ -13,6 +16,7 @@ export default function Sales() {
   const [items, setItems] = useState([])
   const [error, setError] = useState('')
   const [productSearch, setProductSearch] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
 
   const loadData = () => {
     Promise.all([api.getSales(), api.getCustomers(), api.getProducts()])
@@ -20,10 +24,16 @@ export default function Sales() {
         setSales(salesRes.data)
         setCustomers(customersRes.data)
         setProducts(productsRes.data)
+        setCurrentPage(1)
       }).finally(() => setLoading(false))
   }
 
   useEffect(() => { loadData() }, [])
+
+  const paginatedSales = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE
+    return sales.slice(start, start + ITEMS_PER_PAGE)
+  }, [sales, currentPage])
 
   const getVehicleDisplay = (s) => {
     if (s.vehicle_plate) {
@@ -141,25 +151,33 @@ export default function Sales() {
       <div className="card">
         <div className="table-container">
           {sales.length > 0 ? (
-            <table>
-              <thead><tr><th>訂單編號</th><th>日期</th><th>車牌 / 客戶</th><th>發票號碼</th><th>金額</th><th>付款</th><th>操作</th></tr></thead>
-              <tbody>
-                {sales.map(s => (
-                  <tr key={s.id}>
-                    <td><strong>{s.order_number || '-'}</strong></td>
-                    <td>{new Date(s.created_at).toLocaleString()}</td>
-                    <td>{getVehicleDisplay(s)}</td>
-                    <td>{s.invoice_number || '-'}</td>
-                    <td>${s.final_amount.toLocaleString()}</td>
-                    <td><span className="badge badge-success">{s.payment_method}</span></td>
-                    <td className="actions">
-                      <button className="btn btn-secondary btn-sm" onClick={() => viewOrder(s.id)}>檢視</button>
-                      <button className="btn btn-danger btn-sm" onClick={() => handleDelete(s.id)}>刪除</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <>
+              <table>
+                <thead><tr><th>訂單編號</th><th>日期</th><th>車牌 / 客戶</th><th>發票號碼</th><th>金額</th><th>付款</th><th>操作</th></tr></thead>
+                <tbody>
+                  {paginatedSales.map(s => (
+                    <tr key={s.id}>
+                      <td><strong>{s.order_number || '-'}</strong></td>
+                      <td>{new Date(s.created_at).toLocaleString()}</td>
+                      <td>{getVehicleDisplay(s)}</td>
+                      <td>{s.invoice_number || '-'}</td>
+                      <td>${s.final_amount.toLocaleString()}</td>
+                      <td><span className="badge badge-success">{s.payment_method}</span></td>
+                      <td className="actions">
+                        <button className="btn btn-secondary btn-sm" onClick={() => viewOrder(s.id)}>檢視</button>
+                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(s.id)}>刪除</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <Pagination
+                currentPage={currentPage}
+                totalItems={sales.length}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onPageChange={setCurrentPage}
+              />
+            </>
           ) : <div className="empty-state">尚無銷售記錄</div>}
         </div>
       </div>

@@ -1,5 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import api from '../api'
+import Pagination from '../components/Pagination'
+
+const ITEMS_PER_PAGE = 30
 
 export default function Customers() {
   const [customers, setCustomers] = useState([])
@@ -11,16 +14,28 @@ export default function Customers() {
   const [error, setError] = useState('')
   const [searchKeyword, setSearchKeyword] = useState('')
   const [inspectionList, setInspectionList] = useState([])
+  const [currentPage, setCurrentPage] = useState(1)
 
   const loadCustomers = () => {
     if (searchKeyword.trim()) {
-      api.searchCustomers(searchKeyword).then(res => setCustomers(res.data)).finally(() => setLoading(false))
+      api.searchCustomers(searchKeyword).then(res => {
+        setCustomers(res.data)
+        setCurrentPage(1)
+      }).finally(() => setLoading(false))
     } else {
-      api.getCustomers().then(res => setCustomers(res.data)).finally(() => setLoading(false))
+      api.getCustomers().then(res => {
+        setCustomers(res.data)
+        setCurrentPage(1)
+      }).finally(() => setLoading(false))
     }
   }
 
   useEffect(() => { loadCustomers() }, [searchKeyword])
+
+  const paginatedCustomers = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE
+    return customers.slice(start, start + ITEMS_PER_PAGE)
+  }, [customers, currentPage])
 
   const openCreate = () => { setEditData(null); setForm({ license_plate: '', name: '', phone: '', car_model: '', manufacture_date: '' }); setError(''); setShowModal(true) }
   const openEdit = (c) => { setEditData(c); setForm({ license_plate: c.license_plate || '', name: c.name || '', phone: c.phone || '', car_model: c.car_model || '', manufacture_date: c.manufacture_date || '' }); setError(''); setShowModal(true) }
@@ -143,25 +158,33 @@ setShowInspectionModal(true)
       <div className="card">
         <div className="table-container">
           {customers.length > 0 ? (
-            <table>
-              <thead><tr><th>車牌</th><th>姓名</th><th>手機號碼</th><th>車型</th><th>車輛出廠/領照日期</th><th>回廠日期</th><th>操作</th></tr></thead>
-              <tbody>
-                {customers.map(c => (
-                  <tr key={c.id}>
-                    <td>{c.license_plate || '-'}</td>
-                    <td>{c.name}</td>
-                    <td>{c.phone || '-'}</td>
-                    <td>{c.car_model || '-'}</td>
-                    <td>{c.manufacture_date || '-'}</td>
-                    <td>{c.last_visit_date ? new Date(c.last_visit_date).toLocaleDateString() : '-'}</td>
-                    <td className="actions">
-                      <button className="btn btn-secondary btn-sm" onClick={() => openEdit(c)}>編輯</button>
-                      <button className="btn btn-danger btn-sm" onClick={() => handleDelete(c.id)}>刪除</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <>
+              <table>
+                <thead><tr><th>車牌</th><th>姓名</th><th>手機號碼</th><th>車型</th><th>車輛出廠/領照日期</th><th>回廠日期</th><th>操作</th></tr></thead>
+                <tbody>
+                  {paginatedCustomers.map(c => (
+                    <tr key={c.id}>
+                      <td>{c.license_plate || '-'}</td>
+                      <td>{c.name}</td>
+                      <td>{c.phone || '-'}</td>
+                      <td>{c.car_model || '-'}</td>
+                      <td>{c.manufacture_date || '-'}</td>
+                      <td>{c.last_visit_date ? new Date(c.last_visit_date).toLocaleDateString() : '-'}</td>
+                      <td className="actions">
+                        <button className="btn btn-secondary btn-sm" onClick={() => openEdit(c)}>編輯</button>
+                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(c.id)}>刪除</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <Pagination
+                currentPage={currentPage}
+                totalItems={customers.length}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onPageChange={setCurrentPage}
+              />
+            </>
           ) : <div className="empty-state">尚無車輛資料</div>}
         </div>
       </div>

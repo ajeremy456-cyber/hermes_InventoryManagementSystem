@@ -1,5 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import api from '../api'
+import Pagination from '../components/Pagination'
+
+const ITEMS_PER_PAGE = 30
 
 export default function Products() {
   const [products, setProducts] = useState([])
@@ -11,19 +14,25 @@ export default function Products() {
   const [searchKeyword, setSearchKeyword] = useState('')
   const [form, setForm] = useState({ name: '', category_id: '', sub_category_id: '', price: '', cost: '', quantity: '', min_stock: '10', unit: '', description: '' })
   const [error, setError] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
 
   const loadProducts = () => {
     if (searchKeyword.trim()) {
-      api.searchProducts(searchKeyword).then(res => setProducts(res.data)).finally(() => setLoading(false))
+      api.searchProducts(searchKeyword).then(res => { setProducts(res.data); setCurrentPage(1) }).finally(() => setLoading(false))
     } else if (filterLowStock) {
-      api.getProducts({ lowStock: 'true' }).then(res => setProducts(res.data)).finally(() => setLoading(false))
+      api.getProducts({ lowStock: 'true' }).then(res => { setProducts(res.data); setCurrentPage(1) }).finally(() => setLoading(false))
     } else {
-      api.getProducts().then(res => setProducts(res.data)).finally(() => setLoading(false))
+      api.getProducts().then(res => { setProducts(res.data); setCurrentPage(1) }).finally(() => setLoading(false))
     }
   }
 
   useEffect(() => { loadProducts() }, [filterLowStock, searchKeyword])
   useEffect(() => { api.getCategories().then(res => setCategories(res.data)).catch(() => {}) }, [])
+
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE
+    return products.slice(start, start + ITEMS_PER_PAGE)
+  }, [products, currentPage])
 
   const getParentCategories = () => categories.filter(c => !c.parent_id)
   const getChildCategories = (parentId) => categories.filter(c => c.parent_id === parentId)
@@ -147,25 +156,33 @@ export default function Products() {
       <div className="card">
         <div className="table-container">
           {products.length > 0 ? (
-            <table>
-              <thead><tr><th>名稱</th><th>類別</th><th>售價</th><th>成本</th><th>庫存</th><th>狀態</th><th>操作</th></tr></thead>
-              <tbody>
-                {products.map(p => (
-                  <tr key={p.id}>
-                    <td>{p.name}</td>
-                    <td>{getCategoryDisplay(p)}</td>
-                    <td>${p.price.toLocaleString()}</td>
-                    <td>${p.cost.toLocaleString()}</td>
-                    <td>{p.quantity} {p.unit || ''}</td>
-                    <td><span className={`badge ${getStockStatus(p)}`}>{p.quantity <= p.min_stock ? '低庫存' : '正常'}</span></td>
-                    <td className="actions">
-                      <button className="btn btn-secondary btn-sm" onClick={() => openEdit(p)}>編輯</button>
-                      <button className="btn btn-danger btn-sm" onClick={() => handleDelete(p.id)}>刪除</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <>
+              <table>
+                <thead><tr><th>名稱</th><th>類別</th><th>售價</th><th>成本</th><th>庫存</th><th>狀態</th><th>操作</th></tr></thead>
+                <tbody>
+                  {paginatedProducts.map(p => (
+                    <tr key={p.id}>
+                      <td>{p.name}</td>
+                      <td>{getCategoryDisplay(p)}</td>
+                      <td>${p.price.toLocaleString()}</td>
+                      <td>${p.cost.toLocaleString()}</td>
+                      <td>{p.quantity} {p.unit || ''}</td>
+                      <td><span className={`badge ${getStockStatus(p)}`}>{p.quantity <= p.min_stock ? '低庫存' : '正常'}</span></td>
+                      <td className="actions">
+                        <button className="btn btn-secondary btn-sm" onClick={() => openEdit(p)}>編輯</button>
+                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(p.id)}>刪除</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <Pagination
+                currentPage={currentPage}
+                totalItems={products.length}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onPageChange={setCurrentPage}
+              />
+            </>
           ) : <div className="empty-state">{filterLowStock ? '沒有低庫存產品' : '尚無產品資料'}</div>}
         </div>
       </div>
