@@ -285,85 +285,156 @@ export default function Sales() {
 
       {showOrderModal && currentOrder && (
         <div className="modal-overlay" onClick={() => setShowOrderModal(false)}>
-          <div className="modal" style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+          <div className="modal" style={{ maxWidth: '520px', maxHeight: '95vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>訂單明細 - {currentOrder.order_number}</h2>
+              <h2>銷售收據 - {currentOrder.order_number}</h2>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button className="btn btn-secondary btn-sm" onClick={printOrder}>列印</button>
                 <button className="modal-close" onClick={() => setShowOrderModal(false)}>×</button>
               </div>
             </div>
             
-            <div style={{ padding: '1rem', border: '1px solid #ddd', marginBottom: '1rem' }}>
-              <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', color: '#333' }}>客戶 / 車輛資料</h3>
-              {currentOrder.customer_id ? (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.9rem' }}>
-                  <div><strong>車牌：</strong>{currentOrder.vehicle_plate || '-'}</div>
-                  <div><strong>客戶名稱：</strong>{currentOrder.customer_name || '-'}</div>
-                </div>
-              ) : (
-                <p style={{ color: '#666' }}>散客</p>
-              )}
-            </div>
-
-            <div style={{ padding: '1rem', border: '1px solid #ddd', marginBottom: '1rem' }}>
-              <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', color: '#333' }}>消費項目</h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+            <div style={{ 
+              padding: '0.5rem', 
+              backgroundColor: '#fff',
+              color: '#000',
+              fontFamily: '"Courier New", "Menlo", "Monaco", "Consolas", "Liberation Mono", monospace',
+              fontSize: '13px',
+              lineHeight: '1.4',
+              margin: '0.5rem'
+            }}>
+              {/* 店头 */}
+              <div style={{ textAlign: 'center', paddingBottom: '4px', marginBottom: '4px', borderBottom: '1px dashed #000' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '15px', marginBottom: '2px' }}>萬詠國際貿易有限公司</div>
+                <div style={{ fontSize: '11px' }}>TEL: 05-5871980</div>
+              </div>
+              
+              {/* 分隔线 */}
+              <div style={{ textAlign: 'center', margin: '4px 0', letterSpacing: '0' }}>========================================</div>
+              
+              {/* 订单信息 - 使用table固定宽度 */}
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '4px' }}>
+                <tbody>
+                  <tr>
+                    <td style={{ width: '50%', padding: '0' }}>訂單: {currentOrder.order_number || '-'}</td>
+                    <td style={{ width: '50%', padding: '0', textAlign: 'right' }}>日期: {new Date(currentOrder.created_at).toLocaleDateString('zh-TW')}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '0' }}>客戶: {currentOrder.customer_name || '散客'}</td>
+                    <td style={{ padding: '0', textAlign: 'right' }}>{currentOrder.vehicle_plate ? '車牌: ' + currentOrder.vehicle_plate : ''}</td>
+                  </tr>
+                </tbody>
+              </table>
+              
+              {/* 分隔线 */}
+              <div style={{ textAlign: 'center', margin: '4px 0', letterSpacing: '0' }}>----------------------------------------</div>
+              
+              {/* 商品明细 - 固定表格 */}
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '4px' }}>
                 <thead>
-                  <tr style={{ background: '#f5f5f5' }}>
-                    <th style={{ padding: '0.5rem', textAlign: 'left' }}>商品名稱</th>
-                    <th style={{ padding: '0.5rem', textAlign: 'center' }}>數量</th>
-                    <th style={{ padding: '0.5rem', textAlign: 'right' }}>單價</th>
-                    <th style={{ padding: '0.5rem', textAlign: 'right' }}>小計</th>
+                  <tr style={{ fontWeight: 'bold', borderBottom: '1px dashed #000' }}>
+                    <th style={{ width: '50%', textAlign: 'left', padding: '2px 0', fontWeight: 'normal' }}>品名</th>
+                    <th style={{ width: '15%', textAlign: 'center', padding: '2px 0', fontWeight: 'normal' }}>數量</th>
+                    <th style={{ width: '17.5%', textAlign: 'right', padding: '2px 0', fontWeight: 'normal' }}>單價</th>
+                    <th style={{ width: '17.5%', textAlign: 'right', padding: '2px 0', fontWeight: 'normal' }}>小計</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentOrder.items?.map((item, index) => (
-                    <tr key={index} style={{ borderBottom: '1px solid #eee' }}>
-                      <td style={{ padding: '0.5rem' }}>{item.product_name || item.name}</td>
-                      <td style={{ padding: '0.5rem', textAlign: 'center' }}>{item.quantity}</td>
-                      <td style={{ padding: '0.5rem', textAlign: 'right' }}>${item.unit_price?.toLocaleString()}</td>
-                      <td style={{ padding: '0.5rem', textAlign: 'right' }}>${item.subtotal?.toLocaleString()}</td>
+                    <tr key={index}>
+                      <td style={{ padding: '2px 0', wordBreak: 'break-word' }}>{item.product_name || item.name}</td>
+                      <td style={{ textAlign: 'center', padding: '2px 0' }}>{item.quantity}</td>
+                      <td style={{ textAlign: 'right', padding: '2px 0' }}>${item.unit_price?.toLocaleString()}</td>
+                      <td style={{ textAlign: 'right', padding: '2px 0' }}>${item.subtotal?.toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
-                <tfoot>
+              </table>
+              
+              {/* 分隔线 */}
+              <div style={{ textAlign: 'center', margin: '4px 0', letterSpacing: '0' }}>----------------------------------------</div>
+              
+              {/* 金额总计 */}
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '4px' }}>
+                <tbody>
                   <tr>
-                    <td colSpan="3" style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 'bold' }}>總計：</td>
-                    <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 'bold' }}>${currentOrder.total_amount?.toLocaleString()}</td>
+                    <td style={{ padding: '1px 0' }}>總    計:</td>
+                    <td style={{ textAlign: 'right', padding: '1px 0' }}>${currentOrder.total_amount?.toLocaleString()}</td>
                   </tr>
                   {currentOrder.discount > 0 && (
                     <tr>
-                      <td colSpan="3" style={{ padding: '0.5rem', textAlign: 'right' }}>折扣：</td>
-                      <td style={{ padding: '0.5rem', textAlign: 'right', color: '#dc3545' }}>-${currentOrder.discount?.toLocaleString()}</td>
+                      <td style={{ padding: '1px 0' }}>折    扣:</td>
+                      <td style={{ textAlign: 'right', padding: '1px 0' }}>-${currentOrder.discount?.toLocaleString()}</td>
                     </tr>
                   )}
-                  <tr>
-                    <td colSpan="3" style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 'bold', fontSize: '1.1rem' }}>實收金額：</td>
-                    <td style={{ padding: '0.5rem', textAlign: 'right', fontWeight: 'bold', fontSize: '1.1rem', color: '#28a745' }}>${currentOrder.final_amount?.toLocaleString()}</td>
+                  <tr style={{ fontWeight: 'bold', borderTop: '1px dashed #000', paddingTop: '2px' }}>
+                    <td style={{ padding: '2px 0' }}>應收金額:</td>
+                    <td style={{ textAlign: 'right', padding: '2px 0' }}>${currentOrder.final_amount?.toLocaleString()}</td>
                   </tr>
-                </tfoot>
+                  <tr style={{ fontSize: '11px' }}>
+                    <td style={{ padding: '1px 0' }}>已    付：________</td>
+                    <td style={{ textAlign: 'right', padding: '1px 0' }}>未    付：________</td>
+                  </tr>
+                </tbody>
               </table>
-            </div>
-
-            <div style={{ padding: '1rem', border: '1px solid #ddd', marginBottom: '1rem' }}>
-              <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', color: '#333' }}>付款資訊</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.9rem' }}>
-                <div><strong>付款方式：</strong>{currentOrder.payment_method === 'cash' ? '現金' : currentOrder.payment_method === 'card' ? '信用卡' : '轉帳'}</div>
-                <div><strong>發票號碼：</strong>{currentOrder.invoice_number || '-'}</div>
-                <div><strong>訂單日期：</strong>{new Date(currentOrder.created_at).toLocaleString()}</div>
-                {currentOrder.next_service_date && (
-                  <div style={{ color: '#e67e22', fontWeight: 'bold' }}>
-                    <strong>下次回廠：</strong>
-                    {new Date(currentOrder.next_service_date + 'T00:00:00').toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' })}
-                  </div>
-                )}
+              
+              {/* 分隔线 */}
+              <div style={{ textAlign: 'center', margin: '4px 0', letterSpacing: '0' }}>----------------------------------------</div>
+              
+              {/* 付款资讯 */}
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '4px' }}>
+                <tbody>
+                  <tr>
+                    <td style={{ width: '60%', padding: '1px 0' }}>
+                      付款方式: {
+                        currentOrder.payment_method === 'cash' ? '■現金 □信用卡 □轉帳' :
+                        currentOrder.payment_method === 'card' ? '□現金 □信用卡 ■轉帳' :
+                        '□現金 ■信用卡 □轉帳'
+                      }
+                    </td>
+                    <td style={{ width: '40%', padding: '1px 0', textAlign: 'right' }}>
+                      {currentOrder.invoice_number ? '發票: ' + currentOrder.invoice_number : ''}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ width: '60%', padding: '1px 0' }}>
+                      {currentOrder.next_service_date ? '下次回廠: ' + new Date(currentOrder.next_service_date + 'T00:00:00').toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' }) : ''}
+                    </td>
+                    <td style={{ width: '40%', padding: '1px 0', textAlign: 'right' }}>
+                      備註: {currentOrder.note || '-'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              
+              {/* 分隔线 */}
+              <div style={{ textAlign: 'center', margin: '4px 0', letterSpacing: '0' }}>========================================</div>
+              
+              {/* 签名栏 */}
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '8px', fontSize: '11px' }}>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: '2px 0', width: '33%' }}>會  計：________</td>
+                    <td style={{ padding: '2px 0', width: '34%', textAlign: 'center' }}>倉  管：________</td>
+                    <td style={{ padding: '2px 0', width: '33%', textAlign: 'right' }}>客戶簽收：________</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '2px 0' }}>日  期：________</td>
+                    <td style={{ padding: '2px 0', textAlign: 'center' }}>日  期：________</td>
+                    <td style={{ padding: '2px 0', textAlign: 'right' }}>日  期：________</td>
+                  </tr>
+                </tbody>
+              </table>
+              
+              {/* 分隔线 */}
+              <div style={{ textAlign: 'center', marginTop: '8px', letterSpacing: '0' }}>========================================</div>
+              
+              {/* 页脚 */}
+              <div style={{ textAlign: 'center', fontSize: '10px', marginTop: '4px' }}>
+                感謝您的惠顧  歡迎再次光臨
               </div>
-              <div style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
-                <strong>備註：</strong>{currentOrder.note || '-'}
-              </div>
             </div>
-
+            
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" onClick={() => setShowOrderModal(false)}>關閉</button>
             </div>
