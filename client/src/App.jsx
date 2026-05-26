@@ -11,6 +11,7 @@ import Reports from './pages/Reports'
 import Users from './pages/Users'
 import Settings from './pages/Settings'
 import Logs from './pages/Logs'
+import PrintReceipt from './pages/PrintReceipt'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -35,6 +36,7 @@ function App() {
             <Route path="settings" element={<Settings />} />
             <Route path="logs" element={<Logs />} />
           </Route>
+          <Route path="/print/:id" element={<PrintReceipt />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

@@ -51,21 +51,8 @@ export default function Sales() {
   }
 
   const viewOrder = async (saleId) => {
-    try {
-      const response = await api.getSale(saleId)
-      const sale = response.data
-      
-      if (!sale) {
-        alert('找不到訂單資料')
-        return
-      }
-      
-      setCurrentOrder(sale)
-      setShowOrderModal(true)
-    } catch (err) {
-      console.error('載入訂單失敗:', err)
-      alert('無法載入訂單資料')
-    }
+    // Open new tab with print receipt
+    window.open(`/print/${saleId}`, '_blank')
   }
 
   const printOrder = () => {
@@ -418,11 +405,7 @@ export default function Sales() {
                     <td style={{ padding: '2px 0', width: '34%', textAlign: 'center' }}>倉  管：________</td>
                     <td style={{ padding: '2px 0', width: '33%', textAlign: 'right' }}>客戶簽收：________</td>
                   </tr>
-                  <tr>
-                    <td style={{ padding: '2px 0' }}>日  期：________</td>
-                    <td style={{ padding: '2px 0', textAlign: 'center' }}>日  期：________</td>
-                    <td style={{ padding: '2px 0', textAlign: 'right' }}>日  期：________</td>
-                  </tr>
+
                 </tbody>
               </table>
               
@@ -430,9 +413,7 @@ export default function Sales() {
               <div style={{ textAlign: 'center', marginTop: '8px', letterSpacing: '0' }}>========================================</div>
               
               {/* 页脚 */}
-              <div style={{ textAlign: 'center', fontSize: '10px', marginTop: '4px' }}>
-                感謝您的惠顧  歡迎再次光臨
-              </div>
+             
             </div>
             
             <div className="modal-footer">
