@@ -36,25 +36,23 @@ export default function Dashboard() {
           <div className="value">{stats?.totalProducts || 0}</div>
         </div>
         <div className="stat-card">
-          <h3>總銷售額</h3>
-          <div className="value">${(stats?.totalRevenue || 0).toLocaleString()}</div>
-        </div>
-        <div className="stat-card">
           <h3>低庫存產品</h3>
           <div className="value" style={{ color: stats?.lowStockProducts > 0 ? '#dc3545' : '#28a745' }}>
             {stats?.lowStockProducts || 0}
           </div>
         </div>
-        <div className="stat-card">
-          <h3>總進貨額</h3>
-          <div className="value">${(stats?.totalExpenses || 0).toLocaleString()}</div>
-        </div>
-        <div className="stat-card">
-          <h3>淨利潤</h3>
-          <div className="value" style={{ color: (stats?.totalRevenue - stats?.totalExpenses) >= 0 ? '#28a745' : '#dc3545' }}>
-            ${((stats?.totalRevenue || 0) - (stats?.totalExpenses || 0)).toLocaleString()}
+        <div className="stat-card" >
+          <h3>本月營收</h3>
+          <div className="value" style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+            ${(stats?.monthlyRevenue || 0).toLocaleString()}
+          </div>
+          <div style={{ fontSize: '0.85rem', opacity: 0.9, marginTop: '0.5rem' }}>
+            銷售 {stats?.monthlySalesCount || 0} 筆
           </div>
         </div>
+        
+
+        
       </div>
 
       <div className="card">

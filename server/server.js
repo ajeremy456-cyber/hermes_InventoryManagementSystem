@@ -42,6 +42,15 @@ app.use('/api/categories', authMiddleware, categoryRoutes);
 // Dashboard stats
 app.get('/api/dashboard/stats', authMiddleware, (req, res) => {
   try {
+    const getCurrentTimestamp = () => {
+      const now = new Date();
+      now.setHours(now.getHours() + 8);
+      return now.toISOString().slice(0, 10);
+    };
+    
+    const today = getCurrentTimestamp();
+    const monthStart = today.slice(0, 7) + '-01';
+    
     const stats = {
       totalCustomers: db.getDb().prepare('SELECT COUNT(*) as count FROM customers').get().count,
       totalProducts: db.getDb().prepare('SELECT COUNT(*) as count FROM products').get().count,
@@ -49,8 +58,14 @@ app.get('/api/dashboard/stats', authMiddleware, (req, res) => {
       totalRevenue: db.getDb().prepare('SELECT COALESCE(SUM(total_amount), 0) as total FROM sales').get().total,
       totalPurchases: db.getDb().prepare('SELECT COUNT(*) as count FROM purchases').get().count,
       totalExpenses: db.getDb().prepare('SELECT COALESCE(SUM(total_amount), 0) as total FROM purchases').get().total,
-      lowStockProducts: db.getDb().prepare("SELECT COUNT(*) as count FROM products WHERE quantity <= min_stock").get().count
+      lowStockProducts: db.getDb().prepare("SELECT COUNT(*) as count FROM products WHERE quantity <= min_stock").get().count,
+      monthlyRevenue: db.getDb().prepare('SELECT COALESCE(SUM(final_amount), 0) as total FROM sales WHERE created_at >= ?').get(monthStart + ' 00:00:00').total,
+      monthlySalesCount: db.getDb().prepare('SELECT COUNT(*) as count FROM sales WHERE created_at >= ?').get(monthStart + ' 00:00:00').count,
+      monthlyExpenses: db.getDb().prepare('SELECT COALESCE(SUM(total_amount), 0) as total FROM purchases WHERE created_at >= ?').get(monthStart + ' 00:00:00').total,
+      monthlyProfit: 0
     };
+    
+    stats.monthlyProfit = stats.monthlyRevenue - stats.monthlyExpenses;
     res.json(stats);
   } catch (error) {
     res.status(500).json({ error: error.message });
