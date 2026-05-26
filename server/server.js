@@ -3,7 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const db = require('./utils/database');
 const authMiddleware = require('./middleware/auth');
-// const License = require('./utils/License');
+const License = require('./utils/License');
 
 // Routes
 const customerRoutes = require('./routes/customers');
@@ -77,17 +77,22 @@ app.listen(PORT, async () => {
   console.log('\n========================================');
   console.log('🚗 系統啟動中...');
   
-  // 授權驗證已註解（調試中）
-  // const licenseResult = await License.verify();
-  // if (!licenseResult.valid) {
-  //   console.error('\n❌ 授權驗證失敗！');
-  //   console.error('📋 錯誤原因：' + licenseResult.error);
-  //   console.error('\n請聯絡系統管理員處理。');
-  //   console.error('========================================\n');
-  //   process.exit(1);
-  // }
+  const licenseResult = await License.verify();
   
-  console.log('✅ 授權驗證已暫時停用');
+  if (!licenseResult.valid) {
+    console.error('\n❌ 授權驗證失敗！');
+    console.error('📋 錯誤原因：' + licenseResult.error);
+    console.error('\n請聯絡系統管理員處理。');
+    console.error('========================================\n');
+    process.exit(1);
+  }
+  
+  if (licenseResult.isNew) {
+    console.log('✅ ' + licenseResult.message);
+  } else {
+    console.log('✅ ' + licenseResult.message);
+  }
+  
   console.log(`🚀 Server running on port ${PORT}`);
   console.log('========================================\n');
 });
