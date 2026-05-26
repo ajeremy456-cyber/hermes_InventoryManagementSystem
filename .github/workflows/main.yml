@@ -1,0 +1,70 @@
+name: Build Tauri Desktop App
+
+on:
+  push:
+    branches:
+      - car2 # 當你推送到 car2 分支時觸發
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: car2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with: { node-version: 20 }
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # 1. 自動把 Node.js 後端打包成獨立的獨立執行檔 (server-windows.exe)
+      - name: Pack Node.js Server to EXE
+        run: |
+          npm install
+          npx pkg server.js --target node20-win-x64 --output dist/server-windows.exe
+        working-directory: ./server
+
+      # 2. 由於專案目前沒有 src-tauri，在雲端自動為 client 初始化 Tauri 環境
+      # 這會自動生成 src-tauri 資料夾與預設的 tauri.conf.json
+      - name: Initialize Tauri Environment
+        run: |
+          npm install
+          npm install @tauri-apps/cli --save-dev
+          npx tauri init --app-name "HermesInventory" --window-title "Hermes Inventory Management System" --dist-dir "../dist" --dev-path "http://localhost:5173" --before-build-command ""
+        working-directory: ./client
+
+      # 3. 調整產出的 tauri.conf.json，將後端 server.exe 宣告為 Sidecar (外部執行檔)
+      - name: Configure Tauri Sidecar
+        shell: pwsh
+        run: |
+          $configPath = "client/src-tauri/tauri.conf.json"
+          $config = Get-Content $configPath | ConvertFrom-Json
+          # 在 bundle 區塊加入外部執行檔宣告
+          $config.tauri.bundle | Add-Member -NotePropertyName "externalBin" -NotePropertyValue @("binaries/server")
+          $config | ConvertTo-Json -Depth 100 | Set-Content $configPath
+
+      # 4. 建立 binaries 目錄，並將後端 exe 命名為符合 Tauri 規範的名稱放進去
+      - name: Copy Server Binary to Tauri Sidecar
+        run: |
+          mkdir -p client/src-tauri/binaries
+          cp server/dist/server-windows.exe client/src-tauri/binaries/server-x86_64-pc-windows-msvc.exe
+
+      # 5. 執行前端網頁打包 (產出靜態網頁檔案)
+      - name: Build Frontend Web
+        run: npm run build
+        working-directory: ./client
+
+      # 6. 執行 Tauri 核心編譯，將前端網頁與後端 sidecar 封裝成安裝檔
+      - name: Build Tauri Desktop App
+        run: npx tauri build
+        working-directory: ./client
+
+      # 7. 將打包好的安裝檔 (.msi) 上傳到 GitHub 提供下載
+      - name: Upload Installer Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-car2-installer
+          path: client/src-tauri/target/release/bundle/msi/
