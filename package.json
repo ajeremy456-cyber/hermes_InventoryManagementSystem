@@ -1,0 +1,70 @@
+{
+  "name": "hermes-inventory-management",
+  "version": "1.0.0",
+  "main": "./server/server.js",
+  "description": "庫存管理系統",
+  "author": "小鴨",
+"scripts": {
+    "// 🎯 本地免安裝測試（快速產出 win-unpacked 資料夾，直接點 .exe 測試）": "",
+    "pack": "cd client && npm run build && cd .. && npx electron-rebuild -f -w better-sqlite3 && rd /s /q dist-electron && electron-builder --dir",
+    "// 🎯 最終產出安裝檔（正式出貨給使用者用的 .exe 安裝包）": "",
+   "dist": "cd client && npm run build && cd .. && npx electron-rebuild -f -w better-sqlite3 && rd /s /q dist-electron && electron-builder"
+  
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^9.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "electron": "^30.5.1",
+    "electron-builder": "^24.13.3",
+    "nodemon": "^3.1.0"
+  },
+  "build": {
+    "appId": "com.duck.hermes.inventory",
+    "productName": "Hermes庫存管理系統",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "server/**/*",
+      "client/dist/**/*",
+      "package.json",
+      "!client/src/**/*",
+      "!client/*.js",
+      "!client/*.jsx",
+      "!client/index.html",
+      "!client/package.json",
+      "!dist-electron/**/*",
+      "!.git/**/*",
+      "!.vscode/**/*",
+      "node_modules/**/*",
+      "!node_modules/electron/**/*",
+      "!node_modules/electron-builder/**/*",
+      "!node_modules/nodemon/**/*"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/better-sqlite3/**/*",
+      "**/node_modules/bcryptjs/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Hermes庫存管理"
+    }
+  }
+}

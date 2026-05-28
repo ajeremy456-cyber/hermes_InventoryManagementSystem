@@ -1,0 +1,36 @@
+appId: com.hermes.inventory-management
+productName: 庫存管理系統
+copyright: Copyright © 2024
+
+directories:
+  output: dist-electron
+  buildResources: build
+
+# 💡 關鍵修正：確保前端、後端、package.json 通通包進去，且不阻擋 node_modules
+files:
+  - client/dist/**/*
+  - server/**/*
+  - package.json
+
+asar: true
+npmRebuild: true # 💡 保持 true，處理 better-sqlite3 原生模組編譯
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  # 💡 修正：把容易解析失敗的變數檔名，改成最安全的寫死英文檔名
+  artifactName: Hermes_Inventory_Setup_1.0.0.exe
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: 庫存管理系統
+
+extraMetadata:
+  main: server/server.js # 💡 對齊你的進入點檔案名稱
+  name: hermes-inventory-management

@@ -322,7 +322,7 @@ export default function Sales() {
                 <tbody>
                   <tr>
                     <td style={{ width: '50%', padding: '0' }}>訂單: {currentOrder.order_number || '-'}</td>
-                    <td style={{ width: '50%', padding: '0', textAlign: 'right' }}>日期: {new Date(currentOrder.created_at).toLocaleDateString('zh-TW')}</td>
+                    <td style={{ width: '50%', padding: '0', textAlign: 'right'}}>日期:{new Date(currentOrder.created_at).toLocaleDateString('zh-TW')}</td>
                   </tr>
                   <tr>
                     <td style={{ padding: '0' }}>客戶: {currentOrder.customer_name || '散客'}</td>

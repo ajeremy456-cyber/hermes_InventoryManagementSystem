@@ -188,7 +188,7 @@ export default function PrintReceipt() {
                     <tr>
                       <td style={{ width: '50%' }}>訂單: {order.order_number || '-'}</td>
                       <td style={{ width: '50%' }} className="text-right">
-                        日: {new Date(order.created_at).toLocaleDateString('zh-TW')}
+                        日期: {new Date(order.created_at).toLocaleDateString('zh-TW')}
                         {pageChunks.length > 1 ? ` (頁次: ${index + 1}/${pageChunks.length})` : ''}
                       </td>
                     </tr>
