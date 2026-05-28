@@ -5,11 +5,14 @@
   "description": "庫存管理系統",
   "author": "小鴨",
 "scripts": {
+    "// 🎯 清理並構建：關閉所有 Electron 進程後打包": "",
+    "build:clean": "taskkill /F /IM \"Hermes庫存管理系統.exe\" 2>nul & taskkill /F /IM \"electron.exe\" 2>nul & taskkill /F /IM \"app-builder.exe\" 2>nul & timeout /t 3 /nobreak >nul & rd /s /q dist-electron 2>nul & rd /s /q client\\dist 2>nul & echo 清理完成！",
+    
     "// 🎯 本地免安裝測試（快速產出 win-unpacked 資料夾，直接點 .exe 測試）": "",
-    "pack": "cd client && npm run build && cd .. && npx electron-rebuild -f -w better-sqlite3 && rd /s /q dist-electron && electron-builder --dir",
+    "pack": "cd client && npm run build && cd .. && npx electron-rebuild -f -w better-sqlite3 && (if exist dist-electron rd /s /q dist-electron) && electron-builder --dir",
+    
     "// 🎯 最終產出安裝檔（正式出貨給使用者用的 .exe 安裝包）": "",
-   "dist": "cd client && npm run build && cd .. && npx electron-rebuild -f -w better-sqlite3 && rd /s /q dist-electron && electron-builder"
-  
+    "dist": "cd client && npm run build && cd .. && npx electron-rebuild -f -w better-sqlite3 && (if exist dist-electron rd /s /q dist-electron) && electron-builder"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

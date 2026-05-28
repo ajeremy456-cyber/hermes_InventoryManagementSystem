@@ -8,13 +8,13 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    const storedUser = localStorage.getItem('user')
+    const token = sessionStorage.getItem('token')
+    const storedUser = sessionStorage.getItem('user')
     if (token && storedUser) {
       setUser(JSON.parse(storedUser))
       api.getMe().then(res => {
         setUser(res.data)
-        localStorage.setItem('user', JSON.stringify(res.data))
+        sessionStorage.setItem('user', JSON.stringify(res.data))
       }).catch(() => {
         logout()
       }).finally(() => setLoading(false))
@@ -25,15 +25,15 @@ export function AuthProvider({ children }) {
 
   const login = async (username, password) => {
     const res = await api.login({ username, password })
-    localStorage.setItem('token', res.data.token)
-    localStorage.setItem('user', JSON.stringify(res.data.user))
+    sessionStorage.setItem('token', res.data.token)
+    sessionStorage.setItem('user', JSON.stringify(res.data.user))
     setUser(res.data.user)
     return res.data
   }
 
   const logout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    sessionStorage.removeItem('token')
+    sessionStorage.removeItem('user')
     setUser(null)
   }
 
