@@ -1,121 +1,10 @@
-{/*
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const db = require('./utils/database');
 const authMiddleware = require('./middleware/auth');
-// const License = require('./utils/License');
-
-// Routes
-const customerRoutes = require('./routes/customers');
-const productRoutes = require('./routes/products');
-const saleRoutes = require('./routes/sales');
-const purchaseRoutes = require('./routes/purchases');
-const userRoutes = require('./routes/users');
-const logRoutes = require('./routes/logs');
-const settingRoutes = require('./routes/settings');
-const authRoutes = require('./routes/auth');
-const categoryRoutes = require('./routes/categories');
-
-const app = express();
-const PORT = process.env.PORT || 3001;
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Initialize database
-db.initialize();
-
-// Routes - Public
-app.use('/api/auth', authRoutes);
-
-// Routes - Protected
-app.use('/api/customers', authMiddleware, customerRoutes);
-app.use('/api/products', authMiddleware, productRoutes);
-app.use('/api/sales', authMiddleware, saleRoutes);
-app.use('/api/purchases', authMiddleware, purchaseRoutes);
-app.use('/api/users', authMiddleware, userRoutes);
-app.use('/api/logs', authMiddleware, logRoutes);
-app.use('/api/settings', authMiddleware, settingRoutes);
-app.use('/api/categories', authMiddleware, categoryRoutes);
-
-// Dashboard stats
-app.get('/api/dashboard/stats', authMiddleware, (req, res) => {
-  try {
-    const getCurrentTimestamp = () => {
-      const now = new Date();
-      now.setHours(now.getHours() + 8);
-      return now.toISOString().slice(0, 10);
-    };
-    
-    const today = getCurrentTimestamp();
-    const monthStart = today.slice(0, 7) + '-01';
-    
-    const stats = {
-      totalCustomers: db.getDb().prepare('SELECT COUNT(*) as count FROM customers').get().count,
-      totalProducts: db.getDb().prepare('SELECT COUNT(*) as count FROM products').get().count,
-      totalSales: db.getDb().prepare('SELECT COUNT(*) as count FROM sales').get().count,
-      totalRevenue: db.getDb().prepare('SELECT COALESCE(SUM(total_amount), 0) as total FROM sales').get().total,
-      totalPurchases: db.getDb().prepare('SELECT COUNT(*) as count FROM purchases').get().count,
-      totalExpenses: db.getDb().prepare('SELECT COALESCE(SUM(total_amount), 0) as total FROM purchases').get().total,
-      lowStockProducts: db.getDb().prepare("SELECT COUNT(*) as count FROM products WHERE quantity <= min_stock").get().count,
-      monthlyRevenue: db.getDb().prepare('SELECT COALESCE(SUM(final_amount), 0) as total FROM sales WHERE created_at >= ?').get(monthStart + ' 00:00:00').total,
-      monthlySalesCount: db.getDb().prepare('SELECT COUNT(*) as count FROM sales WHERE created_at >= ?').get(monthStart + ' 00:00:00').count,
-      monthlyExpenses: db.getDb().prepare('SELECT COALESCE(SUM(total_amount), 0) as total FROM purchases WHERE created_at >= ?').get(monthStart + ' 00:00:00').total,
-      monthlyProfit: 0
-    };
-    
-    stats.monthlyProfit = stats.monthlyRevenue - stats.monthlyExpenses;
-    res.json(stats);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Recent sales for dashboard
-app.get('/api/dashboard/recent-sales', authMiddleware, (req, res) => {
-  try {
-    const sales = db.getDb().prepare(`
-      SELECT s.*, c.name as customer_name 
-      FROM sales s 
-      LEFT JOIN customers c ON s.customer_id = c.id 
-      ORDER BY s.created_at DESC 
-      LIMIT 10
-    `).all();
-    res.json(sales);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.listen(PORT, async () => {
-  console.log('\n========================================');
-  console.log('🚗 系統啟動中...');
-  
-  // 授權驗證已註解（調試中）
-  // const licenseResult = await License.verify();
-  // if (!licenseResult.valid) {
-  //   console.error('\n❌ 授權驗證失敗！');
-  //   console.error('📋 錯誤原因：' + licenseResult.error);
-  //   console.error('\n請聯絡系統管理員處理。');
-  //   console.error('========================================\n');
-  //   process.exit(1);
-  // }
-  
-  console.log('✅ 授權驗證已暫時停用');
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log('========================================\n');
-});
-
-module.exports = app;
-
-*/}
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const db = require('./utils/database');
-const authMiddleware = require('./middleware/auth');
+const licenseRoutes = require('./routes/license');
 
 // 💡 關鍵安全修正：測試環境下不預先加載 Electron，防止 Node.js 崩潰
 let electronApp = null;
@@ -161,6 +50,7 @@ app.use(express.static(finalDistPath));
 
 // Routes - Public
 app.use('/api/auth', authRoutes);
+app.use('/api/license', licenseRoutes);
 
 // Routes - Protected
 app.use('/api/customers', authMiddleware, customerRoutes);

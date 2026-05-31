@@ -31,6 +31,11 @@ export default {
   register: (data) => api.post('/auth/register', data),
   getMe: () => api.get('/auth/me'),
 
+  // License
+  verifyLicense: (license_key) => api.post('/license/verify', { license_key }),
+  activateLicense: (license_key) => api.post('/license/activate', { license_key }),
+  checkLicenseStatus: () => api.get('/license/status'),
+
   // Dashboard
   getDashboardStats: () => api.get('/dashboard/stats'),
   getRecentSales: () => api.get('/dashboard/recent-sales'),

@@ -58,8 +58,12 @@ export default function Users() {
                   <td><span className={`badge ${u.role === 'admin' ? 'badge-danger' : 'badge-info'}`}>{u.role}</span></td>
                   <td>{new Date(u.created_at).toLocaleDateString()}</td>
                   <td className="actions">
-                    <button className="btn btn-secondary btn-sm" onClick={() => openEdit(u)}>編輯</button>
-                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u.id)}>刪除</button>
+                    {u.username !== 'admin' && (
+                      <>
+                        <button className="btn btn-secondary btn-sm" onClick={() => openEdit(u)}>編輯</button>
+                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u.id)}>刪除</button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}

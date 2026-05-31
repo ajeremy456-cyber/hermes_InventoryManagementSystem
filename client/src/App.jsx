@@ -12,11 +12,36 @@ import Users from './pages/Users'
 import Settings from './pages/Settings'
 import Logs from './pages/Logs'
 import PrintReceipt from './pages/PrintReceipt'
+import Activate from './pages/Activate'
 
 function PrivateRoute({ children }) {
-  const { user, loading } = useAuth()
+  const { user, loading, licenseActivated } = useAuth()
+  
   if (loading) return <div className="loading">載入中...</div>
+  
+  if (licenseActivated === false) {
+    return <Navigate to="/activate" />
+  }
+  
   return user ? children : <Navigate to="/login" />
+}
+
+function LicenseRoute({ children }) {
+  const { licenseActivated, loading, user } = useAuth()
+  
+  if (loading) {
+    return <div className="loading">載入中...</div>
+  }
+  
+  if (licenseActivated === false) {
+    return children
+  }
+  
+  if (user) {
+    return <Navigate to="/" />
+  }
+  
+  return <Navigate to="/login" />
 }
 
 function App() {
@@ -24,6 +49,11 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/activate" element={
+            <LicenseRoute>
+              <Activate />
+            </LicenseRoute>
+          } />
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
             <Route index element={<Dashboard />} />

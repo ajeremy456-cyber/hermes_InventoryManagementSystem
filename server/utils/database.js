@@ -144,7 +144,10 @@ function initialize() {
     { key: 'company_name', value: '庫存管理系統' },
     { key: 'currency', value: 'TWD' },
     { key: 'low_stock_threshold', value: '10' },
-    { key: 'tax_rate', value: '0' }
+    { key: 'tax_rate', value: '0' },
+    { key: 'license_key', value: '0921701336' },  // 💡 預設授權碼
+    { key: 'license_activated', value: 'false' },
+    { key: 'license_activated_at', value: '' }
   ];
   
   const insertSetting = db.prepare(`
@@ -329,7 +332,10 @@ function initialize() {
     { key: 'company_name', value: '庫存管理系統' },
     { key: 'currency', value: 'TWD' },
     { key: 'low_stock_threshold', value: '10' },
-    { key: 'tax_rate', value: '0' }
+    { key: 'tax_rate', value: '0' },
+    { key: 'license_key', value: '0921701336' },
+    { key: 'license_activated', value: 'false' },
+    { key: 'license_activated_at', value: '' }
   ];
   
   const insertSetting = db.prepare(`
